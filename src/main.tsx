@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./index.css";
 import { DAppProvider, Config, Goerli } from "@usedapp/core";
+import { MantineProvider } from "@mantine/core";
 
 const config: Config = {
   readOnlyChainId: Goerli.chainId,
@@ -15,7 +16,9 @@ const config: Config = {
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <DAppProvider config={config}>
-      <App />
+      <MantineProvider withGlobalStyles withNormalizeCSS>
+        <App />
+      </MantineProvider>
     </DAppProvider>
   </React.StrictMode>
 );
