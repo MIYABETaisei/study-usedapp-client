@@ -15,6 +15,7 @@
     "@mantine/hooks": "^5.0.2",
     "@react-three/drei": "^9.19.6",
     "@react-three/fiber": "^8.3.0",
+    "@react-three/postprocessing": "^2.6.0",
     "@types/three": "^0.143.0",
     "@usedapp/core": "^1.1.4",
     "ethers": "^5.6.9",
