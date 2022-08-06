@@ -1,9 +1,13 @@
-import { Button, Card, Grid, Text } from "@mantine/core";
+import { Badge, Button, Card, Container, Text } from "@mantine/core";
+import { ContactShadows } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { Goerli, useEthers } from "@usedapp/core";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FloorItem } from "../../hooks/Floors/Floors";
+import { ScrollableGroup } from "../controls/ScrollableGroup";
 import { FloorCreationModal } from "../FloorCreationModal";
+import { EffectComposer, Noise } from "@react-three/postprocessing";
+import { Floor } from "../models";
 
 export type InfinityTowerProps = {
   floors: FloorItem[];
@@ -12,43 +16,88 @@ export type InfinityTowerProps = {
 export const InfinityTower = ({ floors }: InfinityTowerProps) => {
   const [floorCreationOpened, setFloorCreationOpened] = useState(false);
   const { account, chainId } = useEthers();
+  // Handle scroll
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const handleScroll = () => {
+    const position = window.pageYOffset;
+    setScrollPosition(position);
+  };
+
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
   return (
     <>
       <div id="infinityTowerCanvasWrapper">
         <Canvas camera={{ position: [-12, 1, 14], fov: 35, near: 1, far: 100 }}>
-          <ambientLight intensity={0.5} />
-          <pointLight position={[20, 30, 10]} />
-          <pointLight position={[-10, -10, -10]} color="blue" />
-          <spotLight position={[-2, 1, 32]} angle={0.2} intensity={1} />
-          {floors.map((floor, index) => (
-            <mesh
-              position={[0, index, 0]}
-              rotation={[0, Math.PI * index * 0.08, 0]}
-            >
-              <boxGeometry />
-              <meshStandardMaterial
-                roughness={0.6}
-                metalness={0.3}
-                color="red"
-              />
-            </mesh>
-          ))}
+          <ScrollableGroup scroll={scrollPosition}>
+            <ambientLight intensity={0.5} />
+            <pointLight position={[20, 30, 10]} />
+            <pointLight position={[-10, -10, -10]} color="blue" />
+            <spotLight position={[-2, 1, 32]} angle={0.2} intensity={1} />
+            <ContactShadows
+              scale={12}
+              blur={4}
+              opacity={1}
+              far={100}
+              position={[0, -0.001, 0]}
+            />
+          </ScrollableGroup>
+          <ScrollableGroup scroll={scrollPosition} rotationSpeed={0.28}>
+            {floors.map((floor, index) => (
+              <Floor
+                position={[0, index * 2, 0]}
+                rotation={[0, Math.PI * index * 0.08, 0]}
+                key={index}
+                color={floor.color}
+                windowsTint={floor.windowsTint}
+              >
+                <boxGeometry />
+                <meshStandardMaterial
+                  roughness={0.6}
+                  metalness={0.3}
+                  color="red"
+                />
+              </Floor>
+            ))}
+          </ScrollableGroup>
+          <EffectComposer>
+            <Noise opacity={0.08} />
+          </EffectComposer>
         </Canvas>
       </div>
-      {/* <Grid>
-        {floors.map((floor, index) => (
-          <Grid.Col span={4} key={index}>
-            <Card shadow="sm" sx={{ height: "100%" }}>
-              <Text>#{index}</Text>
-              <Text>{floor.ownerName}</Text>
-              <Text>{floor.message}</Text>
-              <Text>{floor.link}</Text>
-              <Text color={floor.color}>{floor.color}</Text>
-              <Text color={floor.windowsTint}>{floor.windowsTint}</Text>
-            </Card>
-          </Grid.Col>
-        ))}
-      </Grid> */}
+      {floors.map((floor, index) => (
+        <Container
+          key={index}
+          sx={{
+            pointerEvents: "none",
+            maxWidth: 1200,
+            height: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+          }}
+        >
+          <Card shadow="md" sx={{ width: 300 }}>
+            <Badge>Floor #{index}</Badge>
+            <Text weight={"bolder"}>{floor.ownerName}</Text>
+            <Text>{floor.message}</Text>
+            <Text
+              variant="link"
+              component="a"
+              href={floor.link}
+              target="_blank"
+            >
+              {floor.link}
+            </Text>
+            <Text color={floor.color}>{floor.color}</Text>
+            <Text color={floor.windowsTint}>{floor.windowsTint}</Text>
+          </Card>
+        </Container>
+      ))}
       <Button
         onClick={() => setFloorCreationOpened(true)}
         variant="light"
